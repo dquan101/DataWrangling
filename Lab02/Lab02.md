@@ -1,0 +1,116 @@
+Lab02
+================
+Diego Quan
+8/11/2019
+
+``` r
+require(RMySQL)
+connection_name <- "datawrangling.co4pgsadnasr.us-east-2.rds.amazonaws.com"
+db_name <- "dataWrangling"
+user <- "dstrack"
+password <- "datawrangling2019"
+drv = dbDriver("MySQL")
+mydb = dbConnect(drv,host=connection_name,dbname=db_name,user=user,pass=password)
+dbListFields(mydb, "heroes_information")
+```
+
+Ejercicio 1
+
+``` r
+dbGetQuery(mydb, "SELECT name, Publisher 
+                  FROM heroes_information;")
+```
+
+Ejercicio 2
+
+``` r
+dbGetQuery(mydb, "SELECT DISTINCT Publisher 
+                    FROM heroes_information;")
+```
+
+Ejercicio 3
+
+``` r
+dbGetQuery(mydb, "SELECT COUNT(DISTINCT Publisher) 
+                  FROM heroes_information;")
+```
+
+Ejercicio 4 y 5
+
+``` r
+dbGetQuery(mydb, "SELECT * 
+                  FROM heroes_information
+                  WHERE height>200;")
+dbGetQuery(mydb, "SELECT * 
+                  FROM heroes_information
+                  WHERE Race = 'Human'")
+```
+
+Ejercicio 6 y 7
+
+``` r
+dbGetQuery(mydb, "SELECT * 
+                  FROM heroes_information
+                  WHERE height>200
+                  AND Race = 'Human';")
+dbGetQuery(mydb, "SELECT * 
+                  FROM heroes_information
+                  WHERE Weight > 100
+                  AND Weight < 200;")
+```
+
+Ejercicio 8
+
+``` r
+dbGetQuery(mydb, "SELECT * 
+                  FROM heroes_information
+                  WHERE `Eye color`='red'
+                  OR `Eye color`='blue';")
+```
+
+Ejercicio 9
+
+``` r
+dbGetQuery(mydb, "SELECT * 
+                  FROM heroes_information
+                  WHERE weight
+                  BETWEEN 100 AND 200")
+```
+
+Ejercicio 10
+
+``` r
+dbGetQuery(mydb, "SELECT name, weight, height
+                  FROM heroes_information
+                  WHERE weight > 200
+                  AND height > 100
+                  ORDER BY height
+                  DESC;
+                  ")
+dbGetQuery(mydb, "SELECT name, Race
+                  FROM heroes_information
+                  ORDER BY name,
+                  Race
+                  ")
+```
+
+Ejercicio 11
+
+``` r
+dbGetQuery(mydb, "SELECT Gender, Publisher,
+                  COUNT(Gender)
+                  FROM heroes_information
+                  WHERE Gender='Female'
+                  GROUP BY Publisher
+                  ORDER BY COUNT(*) DESC;")
+```
+
+Ejercicio 12
+
+``` r
+dbGetQuery(mydb, "SELECT Alignment, Publisher, Race,
+                  COUNT(Alignment)
+                  FROM heroes_information
+                  WHERE Alignment='good'
+                  HAVING COUNT(Alignment)>30;")
+```
