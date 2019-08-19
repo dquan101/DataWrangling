@@ -1,0 +1,110 @@
+---
+title: "Reporte Transportes"
+author: "Diego Quan"
+date: "8/18/2019"
+output: github_document
+---
+
+```{r cache=TRUE, include=FALSE}
+library(dplyr)
+library(formattable)
+library(tidyr)
+library(stringr)
+data <- read.csv("tabla_completa.csv")
+
+datas <-data.frame(lapply(data, function(x) {
+  sub("|||Faltante", "/ Faltante", x, fixed = TRUE) 
+}))
+datas <-data.frame(lapply(datas, function(x) {
+  sub("|||FALTANTE", "/ Faltante", x, fixed = TRUE) 
+}))
+datas <-data.frame(lapply(datas, function(x) {
+  sub("|||DEVOLUCION", "/ Devolucion", x, fixed = TRUE) 
+}))
+datas <-data.frame(lapply(datas, function(x) {
+  sub("/Despacho a cliente", "/ Despacho a cliente", x, fixed = TRUE) 
+}))
+datas <- datas %>% separate(CLIENTE, c("CLIENTE", "MOTIVO"), sep = "/ ")
+datas$MOTIVO[is.na(datas$MOTIVO)]<-"Despacho a cliente"
+numbers <- c("CANTIDAD", "Q", "CREDITO")
+datas[numbers] <- lapply(datas[numbers], as.character)
+datas[numbers] <- lapply(datas[numbers], as.numeric)
+```
+## Personal
+En el estado actual de la empresa, sería beneficioso la contratación de más personal ya que se puede en la gráfica que cada uno de los empleados contribuye considerablemente al total de ganancias de la empresa. Esto nos dice que añadir más empleados podría aumentarlas, pero hay que tener en mente el costo de operación, ya que esto podría requerir adquirir más unidades de transporte.
+```{r cache=TRUE, echo=FALSE}
+dmb <- aggregate(x = (Q_PROMEDIO=datas$Q), by=list(data$PILOTO), FUN = sum)
+dmb <- dmb[order(dmb$x, decreasing = TRUE),] 
+formattable(dmb)
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9)
+barplot(dmb$x ~ dmb$Group.1, data = dmb, space = 1, names.arg = x, ylab = 'Suma en Q', xlab = 'Piloto', col = grey.colors(9), main="Ingresos generados por piloto")
+```
+
+
+
+## Unidades de transporte
+La respuesta a su pregunta si se requerirá adquirir más unidades de transporte dependerá de la decisión que vaya a tomar en respecto a los pilots. Si contrata a más pilotos deberá adquirir más unidades de transporte. El número de unidades deberá ser proporcional. La unidad que genera la mayor cantidad de ingresos es el Camión Grande.
+```{r cache=TRUE, echo=FALSE}
+unidades <- aggregate(x = datas$CANTIDAD, by=list(datas$UNIDAD), mean)
+colnames(unidades) <- c('Unidad', 'PromedioGenerado')
+formattable(unidades)
+barplot(unidades$PromedioGenerado ~ unidades$Unidad, data = unidades, space = 1, ylab = 'Promedio generado por unidad', xlab = 'Unidad', col = rainbow(3), main=("Promedio de ingresos por unidad de transporte"))
+```
+
+
+
+## Satisfacción de los clientes con la tarifa
+En base a los datos, se puede inferir que los clientes estan satisfechos con las tarifas de la empresa. El único cliente que ha tenido devoluciones es el bar EL GALLO NEGRO, se asume que las devoluciones por esa razón.
+```{r cache=TRUE, echo=FALSE}
+tarifas <- aggregate(x=(datas$Q/datas$CANTIDAD), by=list(datas$UNIDAD), sum)
+formattable(head(datas %>%
+  select(COD_VIAJE, CLIENTE, MOTIVO, Q) %>%
+  filter(MOTIVO=="Devolucion")))
+```
+
+
+## Robo de pilotos
+En lo que concierne a los robos de parte de sus pilotos, considero que ellos no estan cometiendo un crimen en contra de ustedes. Esto lo inferimos a traves de la cantidad de faltantes por piloto mostrada abajo. Todos estan en un promedio bastante cercano, al menos que muchos de sus pilotos les esten robando, lo cual es una opción a considerar 
+```{r cache=TRUE, echo=FALSE}
+fdb <- filter(datas, MOTIVO=="Faltante")
+fdb <- fdb %>% group_by(PILOTO) %>% count(PILOTO)
+colnames(fdb) <- c("Piloto", "#_Faltantes")
+formattable(fdb)
+```
+
+
+## Estrategia a tomar
+Considero que la estrategia que la empresa debe de utilizar es una expansión controlada. Contratar pilotos aptos y a medida que incremente la cantidad de estos, incrementar la cantidad de unidades de transporte. Al utilizar esta estrategia se debe de asegurar que los nuevos pilotos no cometan robo o sean competentes/eficientes.
+
+
+## Clientes más importantes
+ continuación se encuentra una gráfica con su respectiva tabla con la paridad de PARETO de sus clientes.
+```{r cache=TRUE, echo=FALSE}
+PARETO <- aggregate(datas$Q, by=list(datas$CLIENTE), sum)
+formattable(PARETO)
+PARETO <- PARETO[order(PARETO$x, decreasing = TRUE),]
+names <- c(1:15)
+
+barplot(PARETO$x ~ PARETO$Group.1, data = PARETO, names.arg = names,  space = 1, ylab = 'Suma en Q', xlab = 'Clientes', col = heat.colors(15))
+```
+
+
+## Pilotos más productivos
+
+El piloto más productivo es Fernando Mariano Berrio, siguiendole Ismael Rodero Monteaguado
+```{r cache=TRUE, echo=FALSE}
+eficiencia <- aggregate(x = (Q_PROMEDIO=datas$Q), by=list(data$PILOTO), FUN = sum)
+formattable(eficiencia)
+eficiencia <- eficiencia[order(eficiencia$x, decreasing = TRUE),] 
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9)
+barplot(eficiencia$x ~ eficiencia$Group.1, data = eficiencia, space = 1, names.arg = x, ylab = 'Piloto', xlab = 'Suma', col = grey.colors(9), horiz = TRUE)
+```
+
+## Unidades más productivas
+Finalmente las unidades de transporte más productivas son los camiones grandes, seguidos de los pequeños. Básicamente es en orden de tamaño de la unidad.
+```{r cache=TRUE, echo=FALSE}
+camiones <- aggregate(datas$Q, by=list(data$UNIDAD), FUN = mean)
+camiones <- camiones[order(camiones$x, decreasing = TRUE),] 
+nombres <- c("C.Grande", "C.Peque.", "Panel")
+barplot(camiones$x ~ camiones$Group.1, data = camiones, names.arg = nombres, space = 1, ylab = 'Piloto', xlab = 'Suma', col = terrain.colors(3), horiz = TRUE)
+```
