@@ -1,0 +1,28 @@
+---
+title: "Lab04"
+author: "Diego Quan"
+date: "1/9/2019"
+output: github_document
+---
+
+```{r cache = TRUE}
+library(tidyr)
+library(reshape2)
+library(dplyr)
+library(stringr)
+
+places <- read.csv("raw.csv")
+places$mu <- NULL
+places$fu <- NULL
+places$X <- NULL
+molten_places <- melt(places, id = c("country", "year"))
+head(molten_places)
+sep_places <- separate(molten_places, "variable", c("sex", "age"), sep=1)
+sep_places$age <- sub("(..)$", "-\\1", sep_places$age)
+head(sep_places)
+```
+```{r cache = TRUE}
+load(file = 'wide_religion.Rda')
+molten_religion <- melt(wide_religion, id = c('religion'))
+head(molten_religion)
+```
