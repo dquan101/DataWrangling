@@ -1,0 +1,44 @@
+---
+title: "Lab05"
+author: "Diego Quan"
+date: "9/8/2019"
+output: github_document
+---
+
+```{r cache=TRUE, include=FALSE}
+library(lubridate)
+library(dplyr)
+library(tidyverse)
+library(formattable)
+fechas <- read.csv("data.csv")
+```
+
+## Parte 1:
+
+```{r cache=TRUE, echo=FALSE}
+dt <- ymd_hms("2017-08-21T18:26:40") 
+dt %>% force_tz(tzone="US/Central") 
+saros <- period(223, unit="months")
+saros
+synodic_month <- period(c(29, 12, 44, 3), unit=c("days","hours", "minutes", "seconds"))
+synodic_month
+eclipse <- dt + (223 * synodic_month)
+print("El siguiente eclipse sera:")
+eclipse
+```
+
+## Parte 2:
+
+```{r cache=TRUE, echo=FALSE}
+fechas$FechaCreada <- paste(ymd(fechas$FechaCreacion), fechas$HoraCreacion, sep='T')
+fechas$FechaCreada <- ymd_hms(fechas$FechaCreada)
+fechas$FechaEnd <- paste(dmy(fechas$FechaFinal), fechas$HoraFinal, sep='T')
+fechas$FechaEnd <- ymd_hms(fechas$FechaEnd)
+fechas[1] <- NULL
+fechas[1] <- NULL
+fechas[6] <- NULL
+fechas[6] <- NULL
+new_fechas <- head(fechas)
+formattable(new_fechas)
+```
+
