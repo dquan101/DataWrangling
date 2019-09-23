@@ -1,0 +1,113 @@
+---
+title: "Reporte Lab07"
+author: "Diego Quan"
+date: "9/22/2019"
+output: 
+  github_document: 
+    pandoc_args: [
+      "+RTS", "-K1024m",
+      "-RTS"]
+---
+
+```{r cache=TRUE, include=FALSE}
+library(lubridate)
+library(dplyr)
+library(tidyverse)
+library(formattable)
+library(stringr)
+library(reshape2)
+
+
+
+molten_real <- data.frame(read_csv('tidy_light.csv'))
+```
+
+## Estado 2017
+
+Las gananacias en el año 2017 fueron de:
+```{r cache=TRUE}
+ingresos <- sum(molten_real$factura)
+costos <- sum(molten_real$costo_total)
+ganancias <- ingresos - costos
+ganancias
+```
+mientras que los ingresos y costos fueron de:
+```{r cache=TRUE}
+ingresos
+costos
+```
+
+El estado de ingresos y costos por tipo de transporte en el 2017 fueron de:
+```{r cache=TRUE}
+total_unidad <- aggregate(x = molten_real$factura, by=list(molten_real$tipo_transporte), sum)
+colnames(total_unidad)<-c('Unidad', 'Ingresos')
+formattable(total_unidad)
+costo_unidad <- aggregate(x = molten_real$costo_total, by=list(molten_real$tipo_transporte), sum)
+colnames(costo_unidad)<-c('Unidad', 'Ingresos')
+formattable(costo_unidad)
+```
+## Tarifario por unidad
+
+El tarifario estimado por unidad fue de una media de:
+
+```{r cache=TRUE}
+tarifa_unidad <- aggregate(x = molten_real$costo_total, by=list(molten_real$tipo_transporte), mean) #tarifa por unidad
+colnames(tarifa_unidad)<-c('Unidad', 'Tarifa')
+formattable(tarifa_unidad)
+```
+
+## Tarifas aceptables por los clientes:
+
+A raíz de los motivos por los cuales eran solicitados nuestros servicios podemos precisar que los clientes no estan disatisfechos con nuestras tarifas, ninguno muestra algun indicio de lo contrario, y a razón de las ganancias podemos declarar que no estamos en números rojos, ya que estas son positivas. Q.`r integer(ganancias)`.
+
+```{r cache=TRUE}
+unique <- distinct(molten_real, Cod)
+colnames(unique) <- c('Motivos')
+formattable(unique)
+```
+## Pérdidas
+
+En el 2017 no hubo ningun viaje con perdidas, ya que las ganancias individuales de cada uno de estos fue positiva, por más mínima que fuera. Existen varias razones por las cuales se podrían generar perdidas. Entre estas estan:
+* Accidentes de tránsito: si alguno de las unidades de transporte llegan a tener algun accidente, esto puede generar pérdida aun tomando en cuenta el seguro. Esto incrementaría directamente la variable de costo directo, ya que esto incluye tanto el costo de reparación de la unidad como el costo de mandar a otra unidad a terminar operación.
+* Errores operativos: si los trabajadores que operan la unidad llegan a olvidar algun material para poder completar la tarea asignada esto causaría que tener que realizar otro viaje para poder llevarlos, simbolizando pérdida
+* Pagos de bonificaciones a trabajadores: cualquier tipo de bonificación legal a los empleados puede llegar a causar que los costos mensuales llegue a sobrepasar las ganancias
+
+## Centros de distribución 
+
+En cuestión a los centros de distribución, la compañía debería de expanderse para liberar la carga que algunos de los centros de distribución. En la siguiente table se muestran como los centros de distribución 150224 y el centro de distribución 150277 tienen el cuatro veces más carga que los otros dos centros. Al realizar una expansión a 6 centros de distribución se podrían reducir costos en los viajes y mantenimientos de vehiculos de estos centros.
+
+```{r  cache=TRUE}
+centros_distribucion <- count(molten_real, molten_real$origen)
+colnames(centros_distribucion)<-c('Centro', 'Operaciones')
+formattable(centros_distribucion)
+```
+
+## Estrategias a seguir
+
+La recomendación para las estrategias a seguir son principalmente:
+* Tomar en cuenta la expansión de los centros de distribución para aligerar la carga de cada uno de ellos.
+* Al realizar la expansión tomar en cuenta, que tipo de transporte es el más eficiente, en el caso de 2017, los Pickups son los más eficientes como es demostrado en la siguiente tabla. Expandir la flotilla de Pickups para poder realizar viajes más eficientes.
+
+```{r  cache=TRUE}
+strat <- count(molten_real, molten_real$tipo_transporte)
+strat <- cbind(strat, tarifa_unidad$Tarifa)
+colnames(strat) <- c('Tipo_Unidad', 'Viajes', 'Costo_Viaje')
+formattable(strat)
+```
+
+
+
+## 80 - 20
+
+```{r  cache=TRUE}
+Pareto <- count(molten_real, molten_real$Cod)
+Pareto2 <- aggregate(x = molten_real$factura, by=list(molten_real$Cod), sum)
+Final_pareto <- cbind(Pareto, Pareto2$x)
+colnames(Final_pareto) <- c('Motivo', 'Frecuencia', 'Factura_Motivo')
+Final_pareto <- Final_pareto[order(-Final_pareto$Factura_Motivo), ]
+Final_pareto
+par(mai=c(11,4,4,2))
+barplot(Pareto2$x ~ Pareto2$Group.1, data = Pareto2, ylab = 'Ingresos en Q', xlab = 'Motivos', col = heat.colors(15), space=0, las = 2, mar=c(5,8,4,2))
+#barplot(PARETO$x ~ PARETO$Group.1, data = PARETO, names.arg = names,  space = 1, ylab = 'Suma en Q', xlab = 'Clientes', col = heat.colors(15))
+```
+```
