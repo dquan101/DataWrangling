@@ -1,0 +1,17 @@
+library(twitteR)
+library(dplyr)
+library(readr)
+consumer_key <- "1H2Sd8uRLsYIBF2GVAbgmFT9n"
+consumer_secret <- "Hu32lCUoOaJ76jiyCFQL9QzAB0d2Ldpa0TmZRrTSuVwEIqWJbT"
+access_token <- "364609221-BaGICrApsIlXaV7rLeFvDKqLMKdu1QcL8GJA1c3d"
+access_secret <- "KeGWy7F2CjAw8CEalOKRg3BvzyxGsBZQRZeGnVysMpFCK"
+setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+
+tw <- twitteR::searchTwitter('#Worlds2019', n = 1e4, since = '2019-10-21', retryOnRateLimit = 1e3)
+
+df <- twitteR::twListToDF(tw)
+df %>% head() %>% View()
+
+
+write_csv(df,"tweets.csv")
+
