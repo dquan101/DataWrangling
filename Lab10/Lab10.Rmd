@@ -1,0 +1,73 @@
+---
+title: "Lab10"
+author: "Diego Quan"
+date: "11/2/2019"
+output: github_document
+---
+
+```{r cache=TRUE, echo=FALSE}
+library(dplyr)
+library(readr)
+library(DataExplorer)
+library(plotly)
+library(skimr)
+library(robustHD)
+library(ggpubr)
+library(formattable)
+```
+
+## Manipulación de datos
+```{r cache=TRUE}
+df_movies <- read_csv('movies.csv')
+df_ratings <- read_csv('ratings.csv')
+new_ratings <- df_ratings %>% na.omit()
+new_movies <- df_movies %>% na.omit()
+
+agg_ratings <- aggregate(rating~movieId, new_ratings, FUN=mean)
+names(agg_ratings)[1] <- 'id'
+app_movies <- merge(new_movies, agg_ratings[, c("id", "rating")], by="id")
+```
+
+## 1. Detalle de datos
+```{r cache=TRUE}
+skim(app_movies)
+```
+
+## 2.Analísis de datos
+```{r cache=TRUE, echo=FALSE}
+plot_histogram(app_movies)
+plot_boxplot(app_movies, by = "budget")
+plot_boxplot(app_movies, by = "popularity")
+plot_scatterplot(app_movies, by = "popularity", sampled_rows = 500L)
+plot_scatterplot(app_movies, by = "budget", sampled_rows = 500L)
+plot_correlation(na.omit(app_movies), maxcat = 8L)
+```
+
+## 3. Correlación entre dos variables
+```{r cache=TRUE, echo=FALSE}
+ggscatter(app_movies, x = "rating", y = "popularity", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "rating", ylab = "popularity")
+
+ggscatter(app_movies, x = "vote_count", y = "revenue", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "vote_count", ylab = "revenue")
+
+ggscatter(app_movies, x = "revenue", y = "popularity", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "revenue", ylab = "popularity")
+```
+
+## 4. Conclusiones
+Muchos de los datos en la tabla tienen poca correlación y/o relevancia para realizar un analísis. En los analísis realizados se pudieron notar 4 cosas importantes sobre los datos:
+
+- Los datos de rating de IMDB y los de los votos no tienen correlación o tienen un cociente de correlación muy bajo.
+
+- Curiosamente la cantidad de votos tiene correlación con el revenue generado por la película, mientras que la popularidad y el revenue están menos correlacionados.
+
+- Los ratings y la popularidad tienen una correlación baja.
+
+- Existen outliers extremos en la data como en el caso de la película Minions que es la película más popular por el momento.
